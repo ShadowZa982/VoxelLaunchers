@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đang tải...</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f0f0f;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
+    }
+    .loader {
+      width: 70px;
+      height: 70px;
+      border: 6px solid #333;
+      border-top: 6px solid #a855f7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h2 {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+      font-size: 1.4rem;
+    }
+    p {
+      margin: 0;
+      font-size: 1rem;
+      color: #ccc;
+    }
+    #count {
+      color: #a855f7;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="loader"></div>
+    <h2>Đang chuyển hướng tải...</h2>
+    <p>Vui lòng chờ <span id="count">3</span>s</p>
+  </div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const url = urlParams.get('url');
+    let count = 3;
+    const countdown = document.getElementById('count');
+    const timer = setInterval(() => {
+      count--;
+      countdown.textContent = count;
+      if (count <= 0) {
+        clearInterval(timer);
+        if (url) {
+          window.location.href = decodeURIComponent(url);
+        } else {
+          document.body.innerHTML = "<h2>Không tìm thấy đường dẫn tải xuống!</h2>";
+        }
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
