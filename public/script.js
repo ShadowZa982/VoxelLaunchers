@@ -1,4 +1,3 @@
-// === IMAGE SLIDER ===
 let slideIndex = 0;
 const slides = document.querySelectorAll('.slide');
 const dots = document.querySelectorAll('.dot');
@@ -18,19 +17,19 @@ function nextSlide() {
   slideIndex = (slideIndex + 1) % slides.length;
   showSlide(slideIndex);
 }
-// Khởi động slider
+
 if (slides.length > 0) {
   showSlide(slideIndex);
   setInterval(nextSlide, 4000);
 }
-// Click dot
+
 dots.forEach((dot, i) => {
   dot.addEventListener('click', () => {
     slideIndex = i;
     showSlide(slideIndex);
   });
 });
-// === FADE-IN KHI SCROLL ===
+
 const fadeElems = document.querySelectorAll('.fade-in');
 const footer = document.querySelector('.footer');
 const observerOptions = {
@@ -48,7 +47,7 @@ const observer = new IntersectionObserver((entries) => {
 }, observerOptions);
 fadeElems.forEach(el => observer.observe(el));
 if (footer) observer.observe(footer);
-// === MOBILE MENU & SMOOTH SCROLL ===
+
 const hamburger = document.querySelector('.hamburger');
 const mobileMenu = document.querySelector('.mobile-menu');
 const closeBtn = document.querySelector('.close-btn');
@@ -64,7 +63,7 @@ function toggleMobileMenu(open) {
 hamburger?.addEventListener('click', () => toggleMobileMenu(true));
 closeBtn?.addEventListener('click', () => toggleMobileMenu(false));
 overlay.addEventListener('click', () => toggleMobileMenu(false));
-// Smooth scroll
+
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
     const href = this.getAttribute('href');
@@ -79,7 +78,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     }
   });
 });
-// === HIỆU ỨNG ĐÁNH CHỮ ===
+
 document.addEventListener("DOMContentLoaded", function () {
   const textElement = document.querySelector(".typewriter-text");
   if (!textElement) return;
@@ -112,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }, { threshold: 0.5 });
   typingObserver.observe(container);
 });
-// === POPUP TẢI XUỐNG + ĐẾM NGƯỢC + NÚT XÁC NHẬN ===
 const downloadBtns = document.querySelectorAll('.btn-download');
 const popup = document.getElementById('download-popup');
 const progressBar = document.getElementById('progress-bar');
@@ -121,7 +119,6 @@ let countdownInterval, progressInterval;
 let timeLeft = 10;
 let redirectUrl = '';
 let confirmBtn;
-// === ĐẾM LƯỢT TẢI THẬT (SQLite via API) ===
 const downloadCountEl = document.getElementById('download-count');
 function formatNumber(num) {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.0', '') + 'M';
@@ -163,7 +160,6 @@ async function incrementDownload() {
     }, 2);
     if (data.success && typeof data.count === 'number') {
       downloadCountEl.textContent = formatNumber(data.count);
-      // Hiệu ứng nhảy số
       downloadCountEl.style.transition = 'transform 0.2s, color 0.2s';
       downloadCountEl.style.transform = 'scale(1.4)';
       downloadCountEl.style.color = '#c084fc';
@@ -176,39 +172,31 @@ async function incrementDownload() {
     console.error('Lỗi tăng lượt tải:', err);
   }
 }
-// TẢI LƯỢT TẢI KHI MỞ TRANG
+
 loadDownloadCount();
-// === XỬ LÝ NÚT TẢI XUỐNG ===
 downloadBtns.forEach(btn => {
   btn.addEventListener('click', async (e) => {
     const redirect = btn.getAttribute('data-redirect');
     if (!redirect) return;
     e.preventDefault();
-    // Tăng lượt tải ngay lập tức
     await incrementDownload();
-    // Hiển thị popup
     redirectUrl = redirect;
     popup.classList.add('active');
     document.body.style.overflow = 'hidden';
-    // Reset
     timeLeft = 10;
     countdownEl.textContent = timeLeft;
     progressBar.style.width = '0%';
     progressBar.style.transition = 'width 0.3s ease';
-    // Xóa nút cũ
     if (confirmBtn && confirmBtn.parentNode) {
       confirmBtn.remove();
     }
-    // Tạo nút xác nhận
     confirmBtn = document.createElement('button');
     confirmBtn.textContent = 'Đang chờ...';
     confirmBtn.className = 'btn-confirm disabled';
     confirmBtn.disabled = true;
     document.querySelector('.popup-content').appendChild(confirmBtn);
-    // Dừng interval cũ
     clearInterval(countdownInterval);
     clearInterval(progressInterval);
-    // ĐẾM NGƯỢC
     countdownInterval = setInterval(() => {
       timeLeft--;
       countdownEl.textContent = timeLeft;
@@ -224,7 +212,6 @@ downloadBtns.forEach(btn => {
         confirmBtn.onclick = () => startRedirect(redirectUrl);
       }
     }, 1000);
-    // Thanh progress mượt
     progressInterval = setInterval(() => {
       const current = parseFloat(progressBar.style.width) || 0;
       if (current < 100 && timeLeft > 0) {
@@ -233,7 +220,6 @@ downloadBtns.forEach(btn => {
     }, 100);
   });
 });
-// === ĐÓNG POPUP ===
 function closePopup() {
   popup.classList.remove('active');
   document.body.style.overflow = '';
@@ -244,14 +230,14 @@ function closePopup() {
     confirmBtn.remove();
   }
 }
-// === MỞ LINK TẢI ===
 function startRedirect(url) {
-  window.location.href = url;  // Chuyển hướng trực tiếp thay vì open _blank
+  window.location.href = url;
   setTimeout(closePopup, 800);
 }
-// Đóng popup khi nhấn ESC
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && popup.classList.contains('active')) {
     closePopup();
   }
+
 });
