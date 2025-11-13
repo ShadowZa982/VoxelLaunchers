@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
+const Redis = require('ioredis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,68 +8,35 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-let db;
-try {
-  db = new sqlite3.Database(':memory:', (err) => {
-    if (err) {
-      console.error('Lỗi kết nối DB:', err.message);
-    } else {
-      console.log('Kết nối SQLite (in-memory) thành công!');
-      initDatabase();
-    }
-  });
-} catch (err) {
-  console.error('Không thể khởi tạo DB:', err.message);
-}
+const redis = new Redis(process.env.voxel_REDIS_URL);
 
-function initDatabase() {
-  db.serialize(() => {
-    db.run(`
-      CREATE TABLE IF NOT EXISTS download_stats (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        count INTEGER DEFAULT 0
-      )
-    `, (err) => {
-      if (err) {
-        console.error('Lỗi tạo bảng:', err.message);
-      } else {
-        console.log('Bảng download_stats đã sẵn sàng.');
-      }
-    });
-
-    db.run(
-      `INSERT OR IGNORE INTO download_stats (id, count) VALUES (1, 0)`,
-      (err) => {
-        if (err) {
-          console.error('Lỗi khởi tạo dữ liệu:', err.message);
-        } else {
-          console.log('Đã khởi tạo lượt tải: 0 (in-memory)');
-        }
-      }
-    );
-  });
-}
-app.get('/api/get-downloads', (req, res) => {
-  db.get("SELECT count FROM download_stats WHERE id = 1", (err, row) => {
-    if (err) {
-      console.error('Lỗi lấy count:', err.message);
-      return res.status(500).json({ count: 0 });
-    }
-    res.json({ count: row?.count || 0 });
-  });
+redis.on('connect', () => {
+  console.log('Kết nối RedisLabs thành công!');
+  console.log(`URL: ${process.env.voxel_REDIS_URL ? 'Đã kết nối' : 'Chưa cấu hình'}`);
 });
 
-app.post('/api/increment', (req, res) => {
-  db.run("UPDATE download_stats SET count = count + 1 WHERE id = 1", function (err) {
-    if (err) {
-      console.error('Lỗi update count:', err.message);
-      return res.status(500).json({ success: false });
-    }
-    db.get("SELECT count FROM download_stats WHERE id = 1", (err, row) => {
-      if (err) return res.status(500).json({ success: false });
-      res.json({ success: true, count: row?.count || 0 });
-    });
-  });
+redis.on('error', (err) => {
+  console.error('Lỗi Redis:', err.message);
+});
+
+app.get('/api/get-downloads', async (req, res) => {
+  try {
+    const count = await redis.get('download_count');
+    res.json({ count: parseInt(count || '0') });
+  } catch (err) {
+    console.error('Redis GET error:', err.message);
+    res.status(500).json({ count: 0 });
+  }
+});
+
+app.post('/api/increment', async (req, res) => {
+  try {
+    const count = await redis.incr('download_count');
+    res.json({ success: true, count });
+  } catch (err) {
+    console.error('Redis INCR error:', err.message);
+    res.status(500).json({ success: false });
+  }
 });
 
 app.get('/redirect', (req, res) => {
@@ -89,7 +56,6 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server đang chạy tại: http://localhost:${PORT}`);
-  console.log(`DB: SQLite in-memory (không lưu file)`);
+  console.log(`Server chạy tại: http://localhost:${PORT}`);
+  console.log(`Lưu lượt tải vĩnh viễn bằng RedisLabs (Redis)`);
 });
-
