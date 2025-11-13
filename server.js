@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
@@ -6,11 +5,9 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// === Middleware ===
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// === Kết nối SQLite trong RAM (:memory:) ===
 let db;
 try {
   db = new sqlite3.Database(':memory:', (err) => {
@@ -25,10 +22,8 @@ try {
   console.error('Không thể khởi tạo DB:', err.message);
 }
 
-// === Khởi tạo bảng + dữ liệu mặc định ===
 function initDatabase() {
   db.serialize(() => {
-    // Tạo bảng
     db.run(`
       CREATE TABLE IF NOT EXISTS download_stats (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -42,7 +37,6 @@ function initDatabase() {
       }
     });
 
-    // Khởi tạo lượt tải = 0 nếu chưa có
     db.run(
       `INSERT OR IGNORE INTO download_stats (id, count) VALUES (1, 0)`,
       (err) => {
@@ -55,8 +49,6 @@ function initDatabase() {
     );
   });
 }
-
-// === API: Lấy lượt tải ===
 app.get('/api/get-downloads', (req, res) => {
   db.get("SELECT count FROM download_stats WHERE id = 1", (err, row) => {
     if (err) {
@@ -67,7 +59,6 @@ app.get('/api/get-downloads', (req, res) => {
   });
 });
 
-// === API: Tăng lượt tải ===
 app.post('/api/increment', (req, res) => {
   db.run("UPDATE download_stats SET count = count + 1 WHERE id = 1", function (err) {
     if (err) {
@@ -81,7 +72,6 @@ app.post('/api/increment', (req, res) => {
   });
 });
 
-// === Route: Redirect (thay thế redirect.php) ===
 app.get('/redirect', (req, res) => {
   const url = req.query.url;
   if (!url) {
@@ -90,18 +80,16 @@ app.get('/redirect', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'redirect.html'));
 });
 
-// === Route: Trang chủ ===
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// === 404 Handler ===
 app.use((req, res) => {
   res.status(404).send('<h2>Không tìm thấy trang!</h2>');
 });
 
-// === Khởi động Server ===
 app.listen(PORT, () => {
   console.log(`Server đang chạy tại: http://localhost:${PORT}`);
   console.log(`DB: SQLite in-memory (không lưu file)`);
 });
+
