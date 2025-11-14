@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }, { threshold: 0.5 });
   typingObserver.observe(container);
 });
+
 const downloadBtns = document.querySelectorAll('.btn-download');
 const popup = document.getElementById('download-popup');
 const progressBar = document.getElementById('progress-bar');
@@ -119,6 +120,7 @@ let countdownInterval, progressInterval;
 let timeLeft = 10;
 let redirectUrl = '';
 let confirmBtn;
+
 const downloadCountEl = document.getElementById('download-count');
 function formatNumber(num) {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.0', '') + 'M';
@@ -174,29 +176,37 @@ async function incrementDownload() {
 }
 
 loadDownloadCount();
+
 downloadBtns.forEach(btn => {
   btn.addEventListener('click', async (e) => {
     const redirect = btn.getAttribute('data-redirect');
     if (!redirect) return;
     e.preventDefault();
+
     await incrementDownload();
+
     redirectUrl = redirect;
     popup.classList.add('active');
     document.body.style.overflow = 'hidden';
+
     timeLeft = 10;
     countdownEl.textContent = timeLeft;
     progressBar.style.width = '0%';
     progressBar.style.transition = 'width 0.3s ease';
+
     if (confirmBtn && confirmBtn.parentNode) {
       confirmBtn.remove();
     }
+
     confirmBtn = document.createElement('button');
     confirmBtn.textContent = 'Đang chờ...';
     confirmBtn.className = 'btn-confirm disabled';
     confirmBtn.disabled = true;
     document.querySelector('.popup-content').appendChild(confirmBtn);
+
     clearInterval(countdownInterval);
     clearInterval(progressInterval);
+
     countdownInterval = setInterval(() => {
       timeLeft--;
       countdownEl.textContent = timeLeft;
@@ -212,6 +222,7 @@ downloadBtns.forEach(btn => {
         confirmBtn.onclick = () => startRedirect(redirectUrl);
       }
     }, 1000);
+
     progressInterval = setInterval(() => {
       const current = parseFloat(progressBar.style.width) || 0;
       if (current < 100 && timeLeft > 0) {
@@ -220,6 +231,7 @@ downloadBtns.forEach(btn => {
     }, 100);
   });
 });
+
 function closePopup() {
   popup.classList.remove('active');
   document.body.style.overflow = '';
@@ -230,6 +242,7 @@ function closePopup() {
     confirmBtn.remove();
   }
 }
+
 function startRedirect(url) {
   window.location.href = url;
   setTimeout(closePopup, 800);
@@ -239,5 +252,4 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && popup.classList.contains('active')) {
     closePopup();
   }
-
 });

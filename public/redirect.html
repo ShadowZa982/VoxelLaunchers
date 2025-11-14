@@ -22,8 +22,8 @@
     .content {
       display: flex;
       flex-direction: column;
-      align-items: center;     
-      width: 100%;            
+      align-items: center;
+      width: 100%;
       max-width: 400px;
     }
     .loader {
@@ -47,37 +47,81 @@
       font-size: 1rem;
       color: #ccc;
     }
-    #count {
+    #count, #version {
       color: #a855f7;
       font-weight: bold;
+    }
+    .success {
+      color: #4ade80;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <div class="content">
     <div class="loader"></div>
-    <h2>Đang chuyển hướng tải...</h2>
-    <p>Vui lòng chờ <span id="count">3</span>s</p>
+    <h2>Đang chuẩn bị tải xuống...</h2>
+    <p>Phiên bản: <span id="version">đang tải...</span></p>
+    <p id="status">Đang lấy link...</p>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const url = urlParams.get('url');
-    let count = 3;
-    const countdown = document.getElementById('count');
+    const API_URL = 'https://api.github.com/repos/ShadowZa982/VoxelLauncher/releases/latest';
+    const versionEl = document.getElementById('version');
+    const statusEl = document.getElementById('status');
 
-    const timer = setInterval(() => {
-      count--;
-      countdown.textContent = count;
-      if (count <= 0) {
-        clearInterval(timer);
-        if (url) {
-          window.location.href = decodeURIComponent(url);
-        } else {
-          document.body.innerHTML = "<h2>Không tìm thấy đường dẫn tải xuống!</h2>";
-        }
+    async function startDownloadAndRedirect() {
+      try {
+        // 1. Lấy link tải mới nhất
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error('Không kết nối được GitHub');
+        const data = await res.json();
+
+        const exeAsset = data.assets.find(a => 
+          a.name.toLowerCase().includes('.exe') || 
+          a.name.toLowerCase().includes('setup')
+        );
+
+        if (!exeAsset) throw new Error('Không tìm thấy file .exe');
+
+        const downloadUrl = exeAsset.browser_download_url;
+        versionEl.textContent = data.tag_name;
+
+        // 2. Cập nhật trạng thái
+        statusEl.innerHTML = `Đang tải <strong>${exeAsset.name}</strong>...`;
+        document.querySelector('.loader').style.borderTopColor = '#4ade80';
+
+        // 3. Mở link tải trong tab mới (người dùng sẽ thấy tải)
+        const downloadTab = window.open(downloadUrl, '_blank');
+
+        // 4. Đếm ngược 5 giây rồi quay về trang chủ
+        let countdown = 5;
+        statusEl.innerHTML = `Tải bắt đầu! Quay về trang chủ sau <strong id="countdown">5</strong>s...`;
+
+        const timer = setInterval(() => {
+          countdown--;
+          document.getElementById('countdown').textContent = countdown;
+          if (countdown <= 0) {
+            clearInterval(timer);
+            statusEl.innerHTML = `<span class="success">Đã tải xong! Đang quay về...</span>`;
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 800);
+          }
+        }, 1000);
+
+      } catch (err) {
+        console.error(err);
+        versionEl.textContent = 'Lỗi';
+        statusEl.innerHTML = `
+          <p style="color: #ff6b6b;">Không thể tải xuống</p>
+          <p><a href="versions.html" style="color: #a855f7;">Xem tất cả phiên bản →</a></p>
+        `;
       }
-    }, 1000);
+    }
+
+    // Bắt đầu
+    startDownloadAndRedirect();
   </script>
 </body>
 </html>
