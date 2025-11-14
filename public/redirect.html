@@ -47,7 +47,7 @@
       font-size: 1rem;
       color: #ccc;
     }
-    #count, #version {
+    #version, #countdown {
       color: #a855f7;
       font-weight: bold;
     }
@@ -72,13 +72,12 @@
 
     async function startDownloadAndRedirect() {
       try {
-        // 1. Lấy link tải mới nhất
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error('Không kết nối được GitHub');
         const data = await res.json();
 
-        const exeAsset = data.assets.find(a => 
-          a.name.toLowerCase().includes('.exe') || 
+        const exeAsset = data.assets.find(a =>
+          a.name.toLowerCase().includes('.exe') ||
           a.name.toLowerCase().includes('setup')
         );
 
@@ -86,17 +85,11 @@
 
         const downloadUrl = exeAsset.browser_download_url;
         versionEl.textContent = data.tag_name;
-
-        // 2. Cập nhật trạng thái
         statusEl.innerHTML = `Đang tải <strong>${exeAsset.name}</strong>...`;
         document.querySelector('.loader').style.borderTopColor = '#4ade80';
-
-        // 3. Mở link tải trong tab mới (người dùng sẽ thấy tải)
-        const downloadTab = window.open(downloadUrl, '_blank');
-
-        // 4. Đếm ngược 5 giây rồi quay về trang chủ
+        window.open(downloadUrl, '_blank');
         let countdown = 5;
-        statusEl.innerHTML = `Tải bắt đầu! Quay về trang chủ sau <strong id="countdown">5</strong>s...`;
+        statusEl.innerHTML = `Tải đã bắt đầu! Quay về trang chủ sau <strong id="countdown">5</strong>s...`;
 
         const timer = setInterval(() => {
           countdown--;
@@ -119,8 +112,6 @@
         `;
       }
     }
-
-    // Bắt đầu
     startDownloadAndRedirect();
   </script>
 </body>
